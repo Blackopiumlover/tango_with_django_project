@@ -8,10 +8,6 @@ from django.urls import reverse
 from rango.forms import PageForm
 
 def index(request):
-    # Construct a dictionary to pass to the template engine as its context.
-    # Note the key boldmessage matches to {{ boldmessage }} in the template!
-    # context_dict = {'boldmessage': 'Crunchy, creamy, cookie, candy, cupcake!'}
-    # return HttpResponse("Rango says hey there partner! <a href='/rango/about/'>About</a>")
     
     category_list = Category.objects.order_by('-likes')[:5]
     page_list = Page.objects.order_by('-views')[:5]
@@ -20,10 +16,12 @@ def index(request):
     context_dict['boldmessage'] = 'Crunchy, creamy, cookie, candy, cupcake!'
     context_dict['categories'] = category_list
     context_dict['pages'] = page_list
-    context_dict['extra'] = 'From the model solution on GitHub'
 
     return render(request, 'rango/index.html', context=context_dict)
+
 def about(request):
+    #print(request.method)
+    #print(request.user)
     #return HttpResponse("Rango says here is the about page. <a href='/rango/'>Index</a>")
     return render(request, 'rango/about.html')
 
@@ -48,7 +46,7 @@ def add_category(request):
         form = CategoryForm(request.POST)
     if form.is_valid(): 
         form.save(commit=True)
-        return redirect('/rango/') 
+        return redirect('rango:index') 
     else:
         print(form.errors)
     return render(request, 'rango/add_category.html', {'form': form})
@@ -60,7 +58,7 @@ def add_page(request, category_name_slug):
         category = None
 
     if category is None:
-        return redirect('/rango/')
+        return redirect(reverse('rango:index'))
     form = PageForm()
     if request.method == 'POST':
         form = PageForm(request.POST)
@@ -72,7 +70,7 @@ def add_page(request, category_name_slug):
                 page.save()
                 return redirect(reverse('rango:show_category', kwargs={'category_name_slug': category_name_slug}))
         else:
-            print(form.errors)  # This could be better done; for the purposes of TwD, this is fine. DM.
+            print(form.errors)
 
     context_dict = {'form': form, 'category': category}
     return render(request, 'rango/add_page.html', context=context_dict)
